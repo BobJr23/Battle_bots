@@ -65,6 +65,85 @@ class wheels:
     def get_touching(self, value):
         return value.collidepoint(pygame.mouse.get_pos())
 
+def car(
+        space,
+        car_,
+        start,
+        direction,
+):
+    car = car_[0]
+    wheel_l = car_[2] if direction == 1 else car_[1]
+    wheel_r = car_[1] if direction == 1 else car_[2]
+    pos = Vec2d(start, 500)
+    # Left WHEEl
+    wheel_color = *black, 255
+    mass = 100
+    radius_l = wheel_l.radius
+    moment = pymunk.moment_for_circle(mass, 20, radius_l)
+    wheel_left_b = pymunk.Body(mass, moment)
+    wheel_left_s = pymunk.Circle(wheel_left_b, radius_l)
+    wheel_left_s.friction = 2
+    wheel_left_s.color = wheel_color
+    space.add(wheel_left_b, wheel_left_s)
+    # Right Wheel
+    mass = 100
+    radius_r = wheel_r.radius
+    moment = pymunk.moment_for_circle(mass, 20, radius_r)
+    wheel_right_b = pymunk.Body(mass, moment)
+    wheel_right_s = pymunk.Circle(wheel_right_b, radius_r)
+    wheel_right_s.friction = 2
+    wheel_right_s.color = wheel_color
+    space.add(wheel_right_b, wheel_right_s)
+    # CAR BODY
+    mass = car.mass
+    car_body = pymunk.Body(mass, 150000)  # 150000
+    # car_shape = pymunk.Poly.create_box(car_body, size)
+    car_shape = pymunk.Poly(
+        car_body,
+        car.shape
+        if direction == 1
+        else list(map(lambda x: (x[0] * direction, x[1]), car.shape)),
+    )
+    car_shape.color = *brown, 50
+    space.add(car_body, car_shape)
+    top_left, top_right, bottom_right, bottom_left = car_shape.get_vertices()
+
+    car_body.position = pos + (0, -80)
+    wheel_left_b.position = pos - (
+        car.hole1[0] * direction,
+        car.hole1[1],
+    )
+    wheel_right_b.position = pos + (
+        car.hole2[0] * direction,
+        car.hole2[1],
+    )
+
+    space.add(
+        pymunk.PinJoint(wheel_left_b, car_body, (0, 0), (top_right)),
+        pymunk.PinJoint(wheel_left_b, car_body, (0, 0), (bottom_left)),
+        pymunk.PinJoint(wheel_right_b, car_body, (0, 0), (top_left)),
+        pymunk.PinJoint(wheel_right_b, car_body, (0, 0), (bottom_right)),
+    )
+
+    speed = mass / 25 * direction * (30 / radius_l)
+    m1, m2 = (
+        pymunk.SimpleMotor(
+            wheel_left_b,
+            car_body,
+            speed * (radius_r / radius_l) if radius_l < radius_r else speed,
+        ),
+        pymunk.SimpleMotor(
+            wheel_right_b,
+            car_body,
+            speed * (radius_l / radius_r) if radius_r < radius_l else speed,
+        ),
+    )
+    max = 100000
+    m1.collide_bodies = False
+    m2.collide_bodies = False
+
+    space.add(m1, m2)
+    return car_shape
 
 small_wheel, medium_wheel, large_wheel = (
     wheels(10, (window, black, (700, 400), 10)),
@@ -83,10 +162,12 @@ titan = car_bodies(
     300, [(40, 50), (-40, 50), (-40, -100), (40, -100)], 200, (40, 30), (40, -30), 0
 )
 
-total_time = 0
 
 
 def main():
+
+    total_time = 0
+
     while True:
         for event in pygame.event.get():
             if (
