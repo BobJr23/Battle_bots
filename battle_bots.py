@@ -30,6 +30,15 @@ space.sleep_time_threshold = 0.3
 draw_options = pymunk.pygame_util.DrawOptions(window)
 pymunk.pygame_util.positive_y_is_up = False
 
+boundaries = []
+boundaries.append(pymunk.Segment(space.static_body, (-100, 490), (1000, 490), 10))
+# boundaries.append(pymunk.Segment(space.static_body, (0, 0), (0, 490), 10))
+# boundaries.append(pymunk.Segment(space.static_body, (990, 0), (990, 490), 10))
+for x in boundaries:
+    x.friction = 1.0
+    space.add(x)
+
+
 class car_bodies:
     def __init__(self, base_hp, shape, mass, hole1, hole2, wheel_coords=0) -> None:
         self.base_hp = base_hp
@@ -38,6 +47,30 @@ class car_bodies:
         self.hole1 = hole1
         self.hole2 = hole2
         self.wheel_cords = wheel_coords
+
+
+class wheels:
+    def __init__(self, radius, drawing, circle=None) -> None:
+        self.radius = radius
+        self.mass = radius * 3.3
+        self.hp = radius
+        self.drawing = drawing
+        self.circle = circle
+
+    def draw(
+            self,
+    ):
+        return pygame.draw.circle(*self.drawing)
+
+    def get_touching(self, value):
+        return value.collidepoint(pygame.mouse.get_pos())
+
+
+small_wheel, medium_wheel, large_wheel = (
+    wheels(10, (window, black, (700, 400), 10)),
+    wheels(20, (window, black, (770, 400), 20)),
+    wheels(30, (window, black, (860, 400), 30)),
+)
 
 # MAKING CAR BODIES
 classic = car_bodies(
@@ -50,15 +83,16 @@ titan = car_bodies(
     300, [(40, 50), (-40, 50), (-40, -100), (40, -100)], 200, (40, 30), (40, -30), 0
 )
 
+total_time = 0
+
 
 def main():
-
     while True:
         for event in pygame.event.get():
             if (
-                event.type == pygame.QUIT
-                or event.type == pygame.KEYDOWN
-                and (event.key in [pygame.K_ESCAPE, pygame.K_q])
+                    event.type == pygame.QUIT
+                    or event.type == pygame.KEYDOWN
+                    and (event.key in [pygame.K_ESCAPE, pygame.K_q])
             ):
                 sys.exit(0)
 
@@ -66,8 +100,6 @@ def main():
         window.fill(pygame.Color("white"))
 
         space.debug_draw(draw_options)
-
-
 
         pygame.display.flip()
         dt = clock.tick(fps)
