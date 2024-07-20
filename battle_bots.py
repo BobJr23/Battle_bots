@@ -65,6 +65,108 @@ class wheels:
     def get_touching(self, value):
         return value.collidepoint(pygame.mouse.get_pos())
 
+def setup(direction):
+    car = classic
+    selected = 10
+    left_wheel, right_wheel = small_wheel, small_wheel
+    wheel_l, wheel_r = None, None
+
+    while True:
+        window.fill(pygame.Color("white"))
+        window.blit(
+            FONT.render(
+                "Bodies",
+                False,
+                (0, 0, 0),
+            ),
+            (700, 0),
+        )
+        window.blit(
+            FONT.render(
+                "Wheels",
+                False,
+                (0, 0, 0),
+            ),
+            (700, 320),
+        )
+        surf = pygame.draw.polygon(
+            window,
+            brown,
+            list(map(lambda x: (x[0] + 700, x[1] + 70), surfer.shape)),
+        )
+        clasic = pygame.draw.polygon(
+            window,
+            brown,
+            list(map(lambda x: (x[0] + 700, x[1] + 150), classic.shape)),
+        )
+        titin = pygame.draw.polygon(
+            window,
+            brown,
+            list(map(lambda x: (x[0] + 900, x[1] + 150), titan.shape)),
+        )
+        draw = pygame.draw.polygon(
+            window,
+            brown,
+            list(
+                map(lambda x: (x[0] * 2 * direction + 350, x[1] * 2 + 200), car.shape)
+            ),
+        )
+        wheel_l = pygame.draw.circle(
+            window,
+            green if selected == wheel_l else black,
+            (
+                draw.bottomleft[0]
+                if direction == 1
+                else draw.bottomleft[0] - car.wheel_cords,
+                draw.bottom,
+            ),
+            right_wheel.radius + 10,
+            )
+        wheel_r = pygame.draw.circle(
+            window,
+            green if selected == wheel_r else black,
+            (
+                draw.bottomright[0] + car.wheel_cords
+                if direction == 1
+                else draw.bottomright[0],
+                draw.bottom,
+            ),
+            left_wheel.radius + 10,
+            )
+        small_wheel.circle = small_wheel.draw()  # small
+        medium_wheel.circle = medium_wheel.draw()  # medium
+        large_wheel.circle = large_wheel.draw()  # big
+        if pygame.mouse.get_pressed()[0]:
+            if wheel_l.collidepoint(pygame.mouse.get_pos()):
+                selected = wheel_l
+            elif wheel_r.collidepoint(pygame.mouse.get_pos()):
+                selected = wheel_r
+            for x in (small_wheel, medium_wheel, large_wheel):
+                if x.circle.collidepoint(pygame.mouse.get_pos()):
+                    if selected == wheel_l:
+                        right_wheel = x
+                        selected = None
+                    elif selected == wheel_r:
+                        left_wheel = x
+                        selected = None
+            if surf.collidepoint(pygame.mouse.get_pos()):
+                car = surfer
+            elif clasic.collidepoint(pygame.mouse.get_pos()):
+                car = classic
+            elif titin.collidepoint(pygame.mouse.get_pos()):
+                car = titan
+
+        for event in pygame.event.get():
+            if (
+                    event.type == pygame.QUIT
+                    or event.type == pygame.KEYDOWN
+                    and (event.key in [pygame.K_ESCAPE, pygame.K_q])
+            ):
+                sys.exit(0)
+            if event.type == pygame.KEYDOWN and (event.key == pygame.K_RETURN):
+                return (car, left_wheel, right_wheel)
+        pygame.display.flip()
+
 def car(
         space,
         car_,
@@ -188,4 +290,5 @@ def main():
 
 
 if __name__ == "__main__":
+    setup(1)
     main()
